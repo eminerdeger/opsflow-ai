@@ -32,6 +32,33 @@ decisions, and fallback choices. Updated as the project evolves.
 - This models a localized optical/component fault: one component, one location,
   dominant error code, confidence/retry anti-correlation.
 
+## Scenario assumptions (routing_latency_spike, alarm_storm) — P3-B
+
+- All scenario parameters remain synthetic and intentionally simplified; values are
+  chosen to be plausible and clearly detectable, not calibrated to any real system.
+- **routing_latency_spike** models a localized routing slowdown: inside the window
+  (fractions 0.55–0.80), ~55% of events become routing_decision events on
+  ROUTER_02 / LOC_A03 running ~8x the normal duration profile, 70% timing out
+  (ERR_ROUTING_TIMEOUT / ERR_QUEUE_BACKLOG), 1–3 retries, no confidence scores.
+- **alarm_storm** models a controller alarm flood: inside the window (fractions
+  0.40–0.65), ~50% of events become system_alarm events from CONTROLLER_01 /
+  LOC_A01, 90% failed with severity critical (ERR_CONTROLLER_FAULT /
+  ERR_ALARM_FLOOD), 0–1 retries, no confidence scores.
+
+## RCA evidence assumptions — P3-B
+
+- RCA remains deterministic: hypotheses come from fixed evidence templates
+  (read_quality / latency / alarm_storm / partial / diffuse) selected by rule
+  thresholds; it does not infer causes beyond the encoded evidence rules.
+- **Event-type duration comparison** is supporting evidence, mainly for
+  latency-style failures: average duration_ms is compared within the dominant
+  failing event type (window vs baseline), because the whole-window average mixes
+  fast and slow event types and dilutes the signal.
+- **Evidence score maximum is now 10** (was 7): two dimensions were added —
+  duration ratio ≥2x within the dominant failing event type (+2) and failed-event-
+  type homogeneity ≥80% (+1). Confidence thresholds are unchanged (high ≥5,
+  medium ≥3).
+
 ## Architecture decisions
 
 - **Detector uses median/MAD robust z-score** over 5-minute event-time buckets

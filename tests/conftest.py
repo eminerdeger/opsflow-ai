@@ -28,3 +28,27 @@ def baseline_events():
         duration_minutes=120,
     )
     return generator.generate(1000)
+
+
+@pytest.fixture
+def routing_events():
+    """Deterministic routing_latency_spike stream."""
+    generator = EventGenerator(
+        seed=42,
+        scenario="routing_latency_spike",
+        start_time=FIXED_START,
+        duration_minutes=120,
+    )
+    return generator.generate(1000)
+
+
+@pytest.fixture
+def alarm_events():
+    """Deterministic alarm_storm stream."""
+    generator = EventGenerator(
+        seed=42,
+        scenario="alarm_storm",
+        start_time=FIXED_START,
+        duration_minutes=120,
+    )
+    return generator.generate(1000)

@@ -136,12 +136,14 @@ class EventGenerator:
         rng = self.rng
         s = self.scenario
         failed = rng.random() < s.failure_rate
-        status = EventStatus.FAILED if failed else EventStatus.SUCCESS
+        status = s.failed_status if failed else EventStatus.SUCCESS
         error_code = None
         if failed:
             codes = list(s.error_code_weights)
             error_code = rng.choices(codes, weights=[s.error_code_weights[c] for c in codes])[0]
-        confidence = self._clamp(rng.gauss(s.confidence_mean, s.confidence_std), 0.02, 0.65)
+        confidence = None
+        if s.confidence_mean is not None:
+            confidence = self._clamp(rng.gauss(s.confidence_mean, s.confidence_std), 0.02, 0.65)
         mean_ms, std_ms = DURATION_PROFILE[s.target_event_type]
         return OperationalEvent(
             event_id=self._event_id(index),
@@ -150,12 +152,11 @@ class EventGenerator:
             location_id=s.target_location,
             component_id=s.target_component,
             status=status,
-            # Degraded reads run slow: roughly 3x the normal duration profile.
-            duration_ms=max(1, int(rng.gauss(mean_ms * 3, std_ms))),
+            duration_ms=max(1, int(rng.gauss(mean_ms * s.duration_multiplier, std_ms))),
             confidence_score=confidence,
             retry_count=rng.randint(s.retry_min, s.retry_max),
             error_code=error_code,
-            severity=Severity.ERROR if failed else Severity.WARNING,
+            severity=s.failed_severity if failed else Severity.WARNING,
             correlation_id=self._correlation_id(),
             metadata={"synthetic": True, "injected_anomaly": True},
         )

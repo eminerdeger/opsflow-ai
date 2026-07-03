@@ -66,17 +66,38 @@ pytest        # run the test suite
 Excerpt from [reports/sample_incident_report.md](reports/sample_incident_report.md)
 (full curated example committed in this repo):
 
-> Between **2026-07-03T02:35:00+00:00** and **2026-07-03T03:05:00+00:00**, the failure
-> rate rose to **47.7%** against a baseline of **2.7%** (123 failures across 258
+> Between **2026-07-03T16:05:00+00:00** and **2026-07-03T16:40:00+00:00**, the failure
+> rate rose to **41.2%** against a baseline of **2.5%** (126 failures across 306
 > events). Failures concentrated on **OCR_GATE_02** at **LOC_A02**.
 >
 > **Root-cause hypothesis** — Localized read-quality degradation on OCR_GATE_02 at
 > LOC_A02: confidence collapsed while retries and failures spiked on this component
 > only (dominant error: ERR_OCR_LOW_CONFIDENCE). […]
-> **Confidence level:** high (evidence score 7/7)
+> **Confidence level:** high (evidence score 10/10)
 
 Every number in the report is computed from the event data, and the report includes
 the full diagnostic trace of tool invocations that produced it.
+
+### Available scenarios
+
+Scenarios are config entries in `src/opsflow/data_gen/scenarios.py`; pick one with
+`--scenario`:
+
+| Scenario | Failure mode injected | RCA identifies |
+|---|---|---|
+| `baseline` | none (control stream) | nothing to diagnose |
+| `ocr_failure_spike` | OCR confidence collapse on OCR_GATE_02 / LOC_A02 | read-quality degradation |
+| `routing_latency_spike` | routing_decision duration ~6x baseline + timeouts on ROUTER_02 / LOC_A03 | localized latency degradation |
+| `alarm_storm` | flood of critical system_alarm events from CONTROLLER_01 / LOC_A01 | controller alarm storm |
+
+```bash
+python -m opsflow generate-events --count 1000 --scenario routing_latency_spike --output sample_data/events.jsonl
+python -m opsflow detect-anomalies --input sample_data/events.jsonl --output sample_data/anomalies.json
+python -m opsflow diagnose --input sample_data/anomalies.json --events sample_data/events.jsonl --output reports/incident_report.md
+```
+
+The same detect/diagnose commands work for every scenario — detection and RCA read
+only the event stream, never the scenario name.
 
 ### P1 demo — Postgres ingestion + dbt models
 
@@ -132,7 +153,7 @@ and the tool-invocation trace is included in the report for transparency.
 - **Python 3.10+** — Pydantic v2 (event schema/validation), Click (CLI)
 - **PostgreSQL 16** (via docker-compose) — raw event store, `psycopg` v3 loader
 - **dbt** (dbt-core 1.10/1.11 + dbt-postgres) — staging views, health marts, schema tests
-- **pytest** — 21 tests covering generation, detection, RCA, CLI, and ingestion units
+- **pytest** — 27 tests covering generation, detection, RCA, CLI, and ingestion units
 
 Design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
 
@@ -142,8 +163,8 @@ Design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
 - **P1 (done):** idempotent Postgres ingestion + dbt staging/marts + 17 dbt tests
 - **P2 (done):** docs, ADRs, dependency stabilization, portfolio polish
 - **P3 (stretch, in progress):** GitHub Actions CI (done — pytest on every
-  push/PR); Grafana dashboard and more anomaly scenarios (routing storm,
-  controller flap) not started
+  push/PR); additional anomaly scenarios `routing_latency_spike` and `alarm_storm`
+  (done); Grafana dashboard not started
 
 ## Limitations
 

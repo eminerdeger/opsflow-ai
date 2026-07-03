@@ -23,6 +23,7 @@ class WindowMetrics:
     failure_rate: float = 0.0
     avg_confidence: float | None = None
     avg_retry_count: float = 0.0
+    avg_duration_ms: float | None = None
     component_counts: dict[str, int] = field(default_factory=dict)
     location_counts: dict[str, int] = field(default_factory=dict)
     error_code_counts: dict[str, int] = field(default_factory=dict)
@@ -40,6 +41,9 @@ class WindowMetrics:
                 round(self.avg_confidence, 4) if self.avg_confidence is not None else None
             ),
             "avg_retry_count": round(self.avg_retry_count, 4),
+            "avg_duration_ms": (
+                round(self.avg_duration_ms, 1) if self.avg_duration_ms is not None else None
+            ),
         }
 
 
@@ -57,6 +61,7 @@ def compute_window_metrics(
     metrics.failure_rate = metrics.failure_count / len(events)
     metrics.avg_confidence = sum(confidences) / len(confidences) if confidences else None
     metrics.avg_retry_count = sum(e.retry_count for e in events) / len(events)
+    metrics.avg_duration_ms = sum(e.duration_ms for e in events) / len(events)
     metrics.component_counts = dict(Counter(e.component_id for e in events))
     metrics.location_counts = dict(Counter(e.location_id for e in events))
     metrics.error_code_counts = dict(

@@ -100,6 +100,30 @@ class DiagnosisAgent:
             )
         )
 
+        event_types = tools.find_event_type_concentration(window_events)
+        log.append(
+            ToolCall(
+                "find_event_type_concentration",
+                f"top: {event_types[0]['key']} ({event_types[0]['share']:.0%} of failures)"
+                if event_types
+                else "no failed events in window",
+            )
+        )
+
+        type_duration = None
+        if event_types:
+            type_duration = tools.compare_event_type_duration(
+                events, window_start, window_end, event_types[0]["key"]
+            )
+            log.append(
+                ToolCall(
+                    "compare_event_type_duration",
+                    f"{type_duration['event_type']} avg duration "
+                    f"{type_duration['baseline_avg_ms']} ms → {type_duration['window_avg_ms']} ms "
+                    f"(ratio {type_duration['duration_ratio']})",
+                )
+            )
+
         correlation = tools.correlate_retry_count_and_confidence(window_events)
         log.append(
             ToolCall(
@@ -132,6 +156,8 @@ class DiagnosisAgent:
             "component_concentration": components,
             "location_concentration": locations,
             "error_code_concentration": error_codes,
+            "event_type_concentration": event_types,
+            "event_type_duration": type_duration,
             "retry_confidence_correlation": correlation,
             "timeline": timeline,
             "blast_radius": blast_radius,

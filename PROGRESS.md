@@ -1,5 +1,38 @@
 # Progress Log
 
+## 2026-07-04 — P3-B: additional synthetic anomaly scenarios
+
+### Completed milestones
+- Two new config-driven scenarios in `scenarios.py`: `routing_latency_spike`
+  (routing_decision duration ~8x profile + timeouts on ROUTER_02 / LOC_A03) and
+  `alarm_storm` (critical system_alarm flood from CONTROLLER_01 / LOC_A01).
+  `AnomalyScenario` gained defaulted generic fields (failed_status, failed_severity,
+  duration_multiplier, optional confidence) so the generator stays scenario-agnostic;
+  ocr_failure_spike behavior unchanged.
+- Detector needed **no changes** — both scenarios surface as failure-rate spikes
+  through the existing bucketed robust z-score.
+- Deterministic RCA extended minimally: `avg_duration_ms` in window metrics, new
+  `find_event_type_concentration` and `compare_event_type_duration` tools (duration
+  compared within the dominant failing event type, since the whole-window average
+  dilutes it), two new evidence scores (duration ratio, failed-event-type
+  homogeneity; max score now 10), and two new rule-based hypothesis templates
+  (`latency`, `alarm_storm`) with matching recommended actions. OCR template and
+  actions intact.
+- 6 new end-to-end tests (generation localization, detection, diagnosis failure
+  mode/evidence for both scenarios); pytest now 27/27 passing.
+- Smoke-tested all three scenarios via the CLI: each produces 1 detected window and
+  a high-confidence, correctly-localized report (read_quality / latency /
+  alarm_storm).
+- Curated `reports/sample_incident_report.md` intentionally regenerated (report
+  format gained duration row, event-type evidence, 10-point score); no generated
+  sample_data files or local incident_report committed.
+
+### Blockers
+- None.
+
+### Next steps
+- P3 remaining (stretch, only if requested): Grafana dashboard.
+
 ## 2026-07-03 — P3-A: minimal GitHub Actions CI
 
 - Added `.github/workflows/ci.yml`: on every push and pull request, ubuntu-latest,

@@ -130,6 +130,9 @@ def _render_diagnosis(d: Diagnosis) -> list[str]:
         f"| Avg retry_count | {comparison['baseline']['avg_retry_count']:.2f} | "
         f"{comparison['anomaly']['avg_retry_count']:.2f} | "
         f"{comparison['avg_retry_delta']:+.2f} |",
+        f"| Avg duration_ms | {_fmt_ms(comparison['baseline']['avg_duration_ms'])} | "
+        f"{_fmt_ms(comparison['anomaly']['avg_duration_ms'])} | "
+        f"{_fmt_ms(comparison['avg_duration_delta'], signed=True)} |",
         "",
         "### Affected component / location (blast radius)",
         "",
@@ -149,6 +152,8 @@ def _render_diagnosis(d: Diagnosis) -> list[str]:
         lines.append(f"- Component {item['key']}: {item['count']} failures ({item['share']:.0%})")
     for item in d.evidence["location_concentration"]:
         lines.append(f"- Location {item['key']}: {item['count']} failures ({item['share']:.0%})")
+    for item in d.evidence.get("event_type_concentration", []):
+        lines.append(f"- Event type {item['key']}: {item['count']} failures ({item['share']:.0%})")
     lines += ["", "**Error code concentration:**", ""]
     if d.evidence["error_code_concentration"]:
         for item in d.evidence["error_code_concentration"]:
@@ -176,7 +181,7 @@ def _render_diagnosis(d: Diagnosis) -> list[str]:
         d.hypothesis["hypothesis"],
         "",
         f"**Confidence level:** {d.hypothesis['confidence']} "
-        f"(evidence score {d.hypothesis['score']}/7)",
+        f"(evidence score {d.hypothesis['score']}/{d.hypothesis.get('max_score', 7)})",
         "",
         "Reasoning:",
         "",
@@ -199,3 +204,9 @@ def _fmt(value, signed: bool = False) -> str:
     if value is None:
         return "n/a"
     return f"{value:+.3f}" if signed else f"{value:.3f}"
+
+
+def _fmt_ms(value, signed: bool = False) -> str:
+    if value is None:
+        return "n/a"
+    return f"{value:+.0f}" if signed else f"{value:.0f}"
