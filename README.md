@@ -82,6 +82,7 @@ Requires Docker. Install the extras first: `pip install -e ".[postgres,dbt]"`
 
 ```bash
 docker compose up -d                                      # local Postgres 16
+python -m opsflow generate-events --count 1000 --scenario ocr_failure_spike --output sample_data/events.jsonl
 python -m opsflow ingest --input sample_data/events.jsonl # idempotent load
 python -m opsflow ingest --input sample_data/events.jsonl # re-run: 0 inserted, 1000 skipped
 

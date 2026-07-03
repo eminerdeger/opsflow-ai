@@ -19,9 +19,10 @@ radius) feeding a rule-based hypothesis engine. Evidence is scored 0–7 and map
 a low/medium/high confidence level; the selected failure-mode template cites only
 computed numbers. The full tool-invocation trace is printed in the report.
 
-The architecture is deliberately agent-shaped (discrete tools with logged
-invocations), so an LLM planner could later be slotted in over the same tools —
-but the MVP is not an LLM and is never described as one.
+The architecture uses discrete diagnostic tools with logged invocations. Future
+versions may explore optional planner components over the same tools, but the MVP
+intentionally remains deterministic, rule-based, and is never described as an LLM
+agent.
 
 ## Consequences
 

@@ -6,9 +6,10 @@
 ## Context
 
 This project demonstrates operational-data-platform skills (event pipelines, anomaly
-detection, root-cause analysis) in a public portfolio repository. The author has
-professional experience with real systems of this kind, but nothing from any employer
-— data, logs, configs, identifiers, screenshots, or code — may appear here.
+detection, root-cause analysis) in a public portfolio repository. The project is informed by
+general operational data engineering patterns used in mission-critical environments,
+but it does not include or derive from any employer data, logs, configs, identifiers,
+screenshots, or code.
 
 ## Decision
 
