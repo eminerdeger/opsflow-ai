@@ -1,4 +1,4 @@
-# OpsFlow AI — Autonomous Operational Data Platform
+# OpsFlow AI — Operational Data & Incident Analysis Platform
 
 [![CI](https://github.com/eminerdeger/opsflow-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/eminerdeger/opsflow-ai/actions/workflows/ci.yml)
 
