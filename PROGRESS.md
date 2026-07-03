@@ -1,5 +1,49 @@
 # Progress Log
 
+## 2026-07-03 (evening) — P2 complete: portfolio polish
+
+### Completed milestones
+- Dependency stabilization: dbt extra now pins `dbt-core>=1.10,<1.12` (excludes the
+  pre-release 1.12.0bX line that pip had resolved). Reinstalled → dbt-core 1.11.12
+  stable + dbt-postgres 1.10.2; dbt run 6/6 and dbt test 17/17 re-verified against
+  live Postgres.
+- Fixed the dbt generic-test deprecation (MissingArgumentsPropertyInGenericTest…):
+  `accepted_values` args moved under `arguments:` in staging schema.yml. dbt test now
+  runs warning-free.
+- README polish: example RCA output excerpt, tech stack, project status & roadmap,
+  limitations sections added.
+- docs/architecture.md: roadmap updated (P0/P1/P2 done), ADR index added.
+- ADRs added under docs/adr/: 001 clean-room synthetic rebuild, 002 deterministic
+  RCA instead of LLM agent, 003 Postgres + dbt as minimal platform layer.
+- Repo audit: no generated/local files tracked; .gitignore covers sample_data,
+  reports (except curated sample), dbt artifacts, profiles.yml, .env.
+- Security audit: grepped for password/secret/token/api_key/credential/username/
+  internal/prod/jdbc/oracle/mysql/mongodb/private-IP patterns/real vendor names
+  (excluding .git/.venv/__pycache__/dbt target+logs). All hits are the rules docs
+  themselves or the synthetic local-dev credential `opsflow_local_dev`. Clean.
+- Curated sample report verified structurally identical to fresh P0 output
+  (same sections, same high-confidence localization); kept as-is, no churn.
+
+### Commands run (all verified working)
+```
+pytest                                                  # 21 passed
+docker compose up -d                                    # postgres healthy
+python -m opsflow generate-events --count 1000 --scenario ocr_failure_spike --output sample_data/events.jsonl
+python -m opsflow ingest --input sample_data/events.jsonl   # 0 inserted, 1000 skipped (data from P1 run persists in volume — idempotent)
+python -m opsflow ingest --input sample_data/events.jsonl   # 0 inserted, 1000 skipped
+cd dbt && dbt run --profiles-dir . && dbt test --profiles-dir . && cd ..   # 6/6, 17/17
+docker compose down
+python -m opsflow detect-anomalies ... && python -m opsflow diagnose ...   # high-confidence report, OCR_GATE_02/LOC_A02
+pytest                                                  # 21 passed
+```
+
+### Blockers
+- None.
+
+### Next steps
+- P3 (stretch, only if requested): GitHub Actions CI, Grafana dashboard, more
+  anomaly scenarios (routing storm, controller flap).
+
 ## 2026-07-03 (late) — P1 complete: Postgres ingestion + dbt layer
 
 ### Completed milestones

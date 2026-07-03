@@ -55,12 +55,26 @@ injected on one gate, detects the anomaly window with robust statistics
 baseline-vs-anomaly comparison, blast radius, evidence trace, a rule-based root-cause
 hypothesis with a confidence level, and recommended actions.
 
-See [reports/sample_incident_report.md](reports/sample_incident_report.md) for example
-output.
-
 ```bash
 pytest        # run the test suite
 ```
+
+### Example RCA output
+
+Excerpt from [reports/sample_incident_report.md](reports/sample_incident_report.md)
+(full curated example committed in this repo):
+
+> Between **2026-07-03T02:35:00+00:00** and **2026-07-03T03:05:00+00:00**, the failure
+> rate rose to **47.7%** against a baseline of **2.7%** (123 failures across 258
+> events). Failures concentrated on **OCR_GATE_02** at **LOC_A02**.
+>
+> **Root-cause hypothesis** — Localized read-quality degradation on OCR_GATE_02 at
+> LOC_A02: confidence collapsed while retries and failures spiked on this component
+> only (dominant error: ERR_OCR_LOW_CONFIDENCE). […]
+> **Confidence level:** high (evidence score 7/7)
+
+Every number in the report is computed from the event data, and the report includes
+the full diagnostic trace of tool invocations that produced it.
 
 ### P1 demo — Postgres ingestion + dbt models
 
@@ -110,9 +124,33 @@ pipeline of evidence-gathering functions with a rule-based hypothesis engine. It
 intentionally not an LLM: every claim in the report traces back to a computed number,
 and the tool-invocation trace is included in the report for transparency.
 
-## Roadmap
+## Tech stack
+
+- **Python 3.10+** — Pydantic v2 (event schema/validation), Click (CLI)
+- **PostgreSQL 16** (via docker-compose) — raw event store, `psycopg` v3 loader
+- **dbt** (dbt-core 1.10/1.11 + dbt-postgres) — staging views, health marts, schema tests
+- **pytest** — 21 tests covering generation, detection, RCA, CLI, and ingestion units
+
+Design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
+
+## Project status & roadmap
 
 - **P0 (done):** file-based flow — generate → detect → diagnose, tested
-- **P1 (done):** Postgres ingestion (idempotent) + dbt staging/marts + dbt tests
-- **P2:** docs polish, coverage, packaging
-- **P3 (stretch):** GitHub Actions CI, Grafana dashboard, more anomaly scenarios
+- **P1 (done):** idempotent Postgres ingestion + dbt staging/marts + 17 dbt tests
+- **P2 (done):** docs, ADRs, dependency stabilization, portfolio polish
+- **P3 (stretch, not started):** GitHub Actions CI, Grafana dashboard, more anomaly
+  scenarios (routing storm, controller flap)
+
+## Limitations
+
+- Data is synthetic by design; scenarios approximate real failure modes but are
+  simplifications (see [ASSUMPTIONS.md](ASSUMPTIONS.md)).
+- The RCA engine maps evidence to known failure-mode templates; it cannot discover
+  novel causes.
+- Detection operates on 5-minute buckets: sub-bucket spikes or slow gradual
+  degradations may be missed, and the baseline comes from the non-anomalous part of
+  the same stream.
+- Database-dependent behavior (insert/idempotency against live Postgres) is verified
+  with documented manual commands, not in pytest, to keep the suite Docker-free.
+- Single-node, batch-oriented: no streaming, no scheduler, no dashboarding — by
+  scope choice, not oversight.

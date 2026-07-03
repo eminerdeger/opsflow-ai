@@ -12,18 +12,20 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                - baggage_scan
-                - ocr_read
-                - routing_decision
-                - system_alarm
-                - processing_delay
-                - retry_event
+              arguments:
+                values:
+                  - baggage_scan
+                  - ocr_read
+                  - routing_decision
+                  - system_alarm
+                  - processing_delay
+                  - retry_event
       - name: status
         tests:
           - not_null
           - accepted_values:
-              values: [success, failed, timeout, retrying]
+              arguments:
+                values: [success, failed, timeout, retrying]
       - name: event_timestamp
         tests:
           - not_null

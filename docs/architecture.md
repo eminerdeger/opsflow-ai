@@ -91,9 +91,18 @@ company names, hostnames, IPs, paths, table names, logs, or credentials anywhere
 Local Postgres credentials in `.env.example`/`docker-compose.yml` are throwaway dev
 values for a container on localhost. See CLAUDE.md for the binding rules.
 
-## Future roadmap
+## Design decisions (ADRs)
 
-- P1: Postgres ingestion + dbt models/tests
-- P2: coverage, packaging polish, ADRs for key decisions
+Key decisions are recorded as short ADRs in [adr/](adr/):
+
+- [ADR 001 — Clean-room, synthetic-only rebuild](adr/001-clean-room-synthetic-rebuild.md)
+- [ADR 002 — Deterministic RCA instead of an LLM agent for the MVP](adr/002-deterministic-rca-not-llm.md)
+- [ADR 003 — Postgres + dbt as the minimal data platform layer](adr/003-postgres-dbt-minimal-platform.md)
+
+## Roadmap
+
+- P0 (done): file-based flow — generate → detect → diagnose, tested
+- P1 (done): idempotent Postgres ingestion + dbt staging/marts + schema tests
+- P2 (done): docs polish, ADRs, dependency stabilization
 - P3 (stretch): GitHub Actions CI, Grafana dashboard on Postgres, additional
   scenarios (e.g. routing storm, controller flap), more marts

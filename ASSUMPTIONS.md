@@ -73,6 +73,16 @@ decisions, and fallback choices. Updated as the project evolves.
   SQL shape, row mapping, schema file); insert/idempotency behavior is validated
   with documented manual commands in PROGRESS.md.
 
+## P2 decisions (polish)
+
+- **dbt-core pinned `>=1.10,<1.12`**: pip had resolved the pre-release 1.12.0b3;
+  the pin forces stable 1.11.x while staying compatible with dbt-postgres 1.10.x
+  (adapters are decoupled from core since dbt 1.8). Verified: 6/6 models, 17/17
+  tests on dbt-core 1.11.12. See docs/adr/003.
+- **Curated sample report is refreshed only when P0 output changes structurally**;
+  regenerated runs differ only in wall-clock timestamps (generation ends at "now"),
+  so re-committing them would be churn without information.
+
 ## Fallback choices
 
 - If Postgres/dbt (P1) blocks, the P0 file-based flow is the shippable MVP.
