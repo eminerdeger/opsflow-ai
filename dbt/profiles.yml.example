@@ -1,0 +1,13 @@
+# Copy to profiles.yml (gitignored). Synthetic project — local dev credentials only.
+opsflow:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: opsflow
+      password: opsflow_local_dev
+      dbname: opsflow
+      schema: analytics
+      threads: 4

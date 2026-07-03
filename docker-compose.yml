@@ -1,0 +1,22 @@
+# P1 infrastructure: local Postgres for ingestion + dbt.
+# Synthetic project — these are local development credentials only (see .env.example).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: opsflow_postgres
+    environment:
+      POSTGRES_DB: ${OPSFLOW_DB_NAME:-opsflow}
+      POSTGRES_USER: ${OPSFLOW_DB_USER:-opsflow}
+      POSTGRES_PASSWORD: ${OPSFLOW_DB_PASSWORD:-opsflow_local_dev}
+    ports:
+      - "${OPSFLOW_DB_PORT:-5432}:5432"
+    volumes:
+      - opsflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${OPSFLOW_DB_USER:-opsflow}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  opsflow_pgdata:

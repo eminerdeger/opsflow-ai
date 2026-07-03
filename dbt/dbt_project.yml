@@ -1,0 +1,15 @@
+# OpsFlow AI dbt project (P1 milestone — models land after P0 is stable).
+name: opsflow
+version: "0.1.0"
+profile: opsflow
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  opsflow:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
