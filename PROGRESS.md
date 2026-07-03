@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-07-03 — P3-A: minimal GitHub Actions CI
+
+- Added `.github/workflows/ci.yml`: on every push and pull request, ubuntu-latest,
+  Python 3.12, `pip install -e ".[dev]"`, `pytest`. No Postgres/dbt in CI yet
+  (deliberate — the suite is Docker-free by design).
+- CI badge added at the top of README.md; project status updated.
+- Local pytest: 21 passed.
+
 ## 2026-07-03 (evening) — P2 complete: portfolio polish
 
 ### Completed milestones

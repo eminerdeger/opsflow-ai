@@ -1,5 +1,7 @@
 # OpsFlow AI — Autonomous Operational Data Platform
 
+[![CI](https://github.com/eminerdeger/opsflow-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/eminerdeger/opsflow-ai/actions/workflows/ci.yml)
+
 A synthetic operational data platform for high-volume event systems such as logistics,
 airport systems, manufacturing, fintech operations, telecom, cloud operations, or other
 mission-critical environments.
@@ -139,8 +141,9 @@ Design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
 - **P0 (done):** file-based flow — generate → detect → diagnose, tested
 - **P1 (done):** idempotent Postgres ingestion + dbt staging/marts + 17 dbt tests
 - **P2 (done):** docs, ADRs, dependency stabilization, portfolio polish
-- **P3 (stretch, not started):** GitHub Actions CI, Grafana dashboard, more anomaly
-  scenarios (routing storm, controller flap)
+- **P3 (stretch, in progress):** GitHub Actions CI (done — pytest on every
+  push/PR); Grafana dashboard and more anomaly scenarios (routing storm,
+  controller flap) not started
 
 ## Limitations
 
