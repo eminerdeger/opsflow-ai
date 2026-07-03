@@ -162,9 +162,9 @@ Design decisions are recorded as ADRs in [docs/adr/](docs/adr/).
 - **P0 (done):** file-based flow — generate → detect → diagnose, tested
 - **P1 (done):** idempotent Postgres ingestion + dbt staging/marts + 17 dbt tests
 - **P2 (done):** docs, ADRs, dependency stabilization, portfolio polish
-- **P3 (stretch, in progress):** GitHub Actions CI (done — pytest on every
-  push/PR); additional anomaly scenarios `routing_latency_spike` and `alarm_storm`
-  (done); Grafana dashboard not started
+- **P3 (done):** GitHub Actions CI + additional synthetic anomaly scenarios
+  (`routing_latency_spike`, `alarm_storm`)
+- **Future (optional):** Grafana/dashboard visualization layer
 
 ## Limitations
 
