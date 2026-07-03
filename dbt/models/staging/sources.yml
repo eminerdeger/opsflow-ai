@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: opsflow_raw
+    description: Raw synthetic operational events loaded by `opsflow ingest`.
+    schema: public
+    tables:
+      - name: raw_events
+        columns:
+          - name: event_id
+            description: Natural key; loader enforces idempotency via ON CONFLICT.

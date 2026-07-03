@@ -18,10 +18,10 @@ flowchart TB
         RCA[DiagnosisAgent\ndeterministic tool pipeline] -->|incident_report.md| REP[Markdown incident report]
     end
 
-    subgraph P1["P1 — data platform layer (planned)"]
-        G -.->|events.jsonl| ING[opsflow ingest\nidempotent Postgres loader]
-        ING -.-> PG[(Postgres\nraw_events)]
-        PG -.-> DBT[dbt staging/marts + tests]
+    subgraph P1["P1 — data platform layer (implemented)"]
+        G -->|events.jsonl| ING[opsflow ingest\nidempotent Postgres loader]
+        ING --> PG[(Postgres\nraw_events)]
+        PG --> DBT[dbt staging/marts + tests]
     end
 ```
 
@@ -62,20 +62,27 @@ says so and the recommended actions widen to shared upstream dependencies.
 This mirrors how a good on-call engineer works: gather evidence, compare against
 baseline, localize, then hypothesize — never the other way around.
 
-## P1 flow (planned)
+## P1 flow (implemented)
 
 ```
 docker compose up -d
 python -m opsflow ingest --input sample_data/events.jsonl
-cd dbt && dbt run && dbt test
+cd dbt && dbt run --profiles-dir . && dbt test --profiles-dir .
 ```
 
-- **Ingestion**: idempotent batch loading into `raw_events`
-  (`ON CONFLICT (event_id) DO NOTHING`), watermark/state-based incremental extraction
-  on event time so re-runs and backfills never double-count or create false spikes.
-- **dbt**: staging views over `raw_events`, marts for failure rates by
-  component/window, dbt tests (not null, accepted values, uniqueness).
-- **Retention**: optional rolling-window retention config (aging out old partitions).
+- **Ingestion**: every row is validated through the shared Pydantic schema, then
+  batch-inserted into `raw_events` with `ON CONFLICT (event_id) DO NOTHING` —
+  re-running ingestion is a no-op (verified: second run inserts 0, skips 1000).
+  The CLI reports rows read / inserted / skipped.
+- **Event-time correctness**: `raw_events."timestamp"` is the true event time;
+  `inserted_at` is load time. Staging renames event time to `event_timestamp`, and
+  every time-based model aggregates on it — backfills can never create false spikes.
+- **dbt**: staging views (`stg_events`, `stg_ocr_events`, `stg_alarm_events`) only
+  rename/cast; marts (`event_summary`, `ocr_health`, `component_health`) hold the
+  aggregation logic. `ocr_health` mirrors the Python detector's 5-minute event-time
+  buckets. 17 schema tests cover key uniqueness, not-null, and accepted values.
+- **Future hardening**: watermark/state table for incremental extraction, optional
+  rolling-window retention config.
 
 ## Security & privacy
 

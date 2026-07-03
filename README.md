@@ -62,6 +62,29 @@ output.
 pytest        # run the test suite
 ```
 
+### P1 demo — Postgres ingestion + dbt models
+
+Requires Docker. Install the extras first: `pip install -e ".[postgres,dbt]"`
+
+```bash
+docker compose up -d                                      # local Postgres 16
+python -m opsflow ingest --input sample_data/events.jsonl # idempotent load
+python -m opsflow ingest --input sample_data/events.jsonl # re-run: 0 inserted, 1000 skipped
+
+cd dbt
+cp profiles.yml.example profiles.yml                      # synthetic local-dev values
+dbt run --profiles-dir .                                  # staging views + marts
+dbt test --profiles-dir .                                 # schema tests
+cd ..
+```
+
+Ingestion validates every row through the same Pydantic schema as P0 and inserts
+with `ON CONFLICT (event_id) DO NOTHING`, so re-runs and backfills never
+double-count. The dbt layer builds `stg_events` / `stg_ocr_events` /
+`stg_alarm_events` staging views and `event_summary` / `ocr_health` /
+`component_health` marts in the `analytics` schema — `ocr_health` uses the same
+5-minute event-time buckets as the Python detector.
+
 ## Architecture overview
 
 ```mermaid
@@ -75,7 +98,8 @@ flowchart LR
 - `src/opsflow/data_gen/` — Pydantic event schema, scenario configs, seeded generator
 - `src/opsflow/detection/` — event-time bucketing, window metrics, anomaly detector
 - `src/opsflow/rca/` — tool-style evidence functions, diagnosis workflow, report writer
-- `src/opsflow/ingestion/`, `src/opsflow/db/`, `dbt/` — P1 Postgres/dbt layer (planned)
+- `src/opsflow/ingestion/`, `src/opsflow/db/` — idempotent Postgres loader + schema
+- `dbt/` — staging views and health marts over `raw_events`, with schema tests
 
 Full details: [docs/architecture.md](docs/architecture.md)
 
@@ -89,6 +113,6 @@ and the tool-invocation trace is included in the report for transparency.
 ## Roadmap
 
 - **P0 (done):** file-based flow — generate → detect → diagnose, tested
-- **P1:** Postgres ingestion (idempotent, watermark-based) + dbt staging/marts + dbt tests
+- **P1 (done):** Postgres ingestion (idempotent) + dbt staging/marts + dbt tests
 - **P2:** docs polish, coverage, packaging
 - **P3 (stretch):** GitHub Actions CI, Grafana dashboard, more anomaly scenarios

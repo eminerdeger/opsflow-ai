@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_events
+    description: All raw events, renamed/cast; event_timestamp is event time.
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+          - unique
+      - name: event_type
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - baggage_scan
+                - ocr_read
+                - routing_decision
+                - system_alarm
+                - processing_delay
+                - retry_event
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: [success, failed, timeout, retrying]
+      - name: event_timestamp
+        tests:
+          - not_null
+
+  - name: stg_ocr_events
+    description: OCR read events only (carry confidence_score).
+    columns:
+      - name: event_id
+        tests: [not_null, unique]
+
+  - name: stg_alarm_events
+    description: System alarm events only.
+    columns:
+      - name: event_id
+        tests: [not_null, unique]

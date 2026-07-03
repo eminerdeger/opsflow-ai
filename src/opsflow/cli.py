@@ -104,12 +104,35 @@ def diagnose(anomalies_path: Path, events_path: Path, output: Path) -> None:
 
 
 @main.command("ingest")
-@click.option("--input", "input_path", default=config.DEFAULT_EVENTS_PATH, show_default=True, type=click.Path(path_type=Path))
-def ingest(input_path: Path) -> None:
-    """Load events into Postgres (P1 — not implemented yet)."""
-    raise click.ClickException(
-        "Postgres ingestion is the P1 milestone and is not implemented yet. "
-        "The P0 file-based flow (generate-events → detect-anomalies → diagnose) is complete."
+@click.option("--input", "input_path", default=config.DEFAULT_EVENTS_PATH, show_default=True, type=click.Path(exists=True, path_type=Path))
+@click.option("--batch-size", default=500, show_default=True, help="Rows per insert batch.")
+def ingest(input_path: Path, batch_size: int) -> None:
+    """Load events JSONL into Postgres (idempotent: ON CONFLICT DO NOTHING)."""
+    try:
+        import psycopg  # noqa: F401
+    except ImportError as exc:
+        raise click.ClickException(
+            "psycopg is not installed. Install the P1 extra: pip install -e '.[postgres]'"
+        ) from exc
+
+    from opsflow.db.connection import DbSettings, connect
+    from opsflow.ingestion.postgres_loader import apply_schema, ingest_events
+
+    events = read_events_jsonl(input_path)
+    settings = DbSettings.from_env()
+    try:
+        with connect(settings) as conn:
+            apply_schema(conn)
+            result = ingest_events(conn, events, batch_size=batch_size)
+    except Exception as exc:  # OperationalError etc. — give an actionable message
+        raise click.ClickException(
+            f"Could not ingest into Postgres at {settings.host}:{settings.port}/"
+            f"{settings.dbname}: {exc}\nIs the database up? Try: docker compose up -d"
+        ) from exc
+
+    click.echo(
+        f"Ingested {input_path}: rows read={result.rows_read}, "
+        f"inserted={result.rows_inserted}, skipped (duplicates)={result.rows_skipped}"
     )
 
 

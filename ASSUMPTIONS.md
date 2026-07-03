@@ -51,6 +51,28 @@ decisions, and fallback choices. Updated as the project evolves.
 - **P1 placeholders committed early** (db/schema.sql, docker-compose.yml, dbt dirs)
   to fix the target shape, but no P1 logic until P0 is stable — per priority rules.
 
+## P1 decisions (Postgres + dbt)
+
+- **Column naming**: raw_events stores the event time as `"timestamp"` (quoted,
+  Postgres non-reserved keyword) and the load time as `inserted_at`. The staging
+  model immediately renames `"timestamp"` → `event_timestamp` so downstream SQL
+  never touches the quoted name; all time-based models use event time only.
+- **Idempotency via count delta**: inserted-row counts are measured as the
+  table-count difference before/after the batch loop rather than trusting
+  executemany rowcount semantics — simple and driver-agnostic.
+- **psycopg is optional**: imported lazily inside `opsflow ingest` and
+  `db/connection.py`, so the P0 flow and its tests never require the `postgres`
+  extra or a database.
+- **dbt kept minimal**: 3 staging views + 3 table marts in schema `analytics`;
+  staging only renames/casts (plus an `is_failure` convenience flag), marts hold
+  aggregation logic. `ocr_health` uses the same 5-minute event-time buckets as the
+  Python detector so both layers describe anomalies identically.
+- **dbt profile handling**: `dbt/profiles.yml` is gitignored; it is a straight copy
+  of the committed, fully synthetic `profiles.yml.example` (`dbt run --profiles-dir .`).
+- **DB integration tests are manual**: pytest stays Docker-free (unit tests cover
+  SQL shape, row mapping, schema file); insert/idempotency behavior is validated
+  with documented manual commands in PROGRESS.md.
+
 ## Fallback choices
 
 - If Postgres/dbt (P1) blocks, the P0 file-based flow is the shippable MVP.

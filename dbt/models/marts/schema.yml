@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: event_summary
+    description: Volume/failure/latency profile per event type.
+    columns:
+      - name: event_type
+        tests: [not_null, unique]
+
+  - name: ocr_health
+    description: OCR read quality per component per 5-minute event-time bucket.
+    columns:
+      - name: component_id
+        tests: [not_null]
+      - name: bucket_start
+        tests: [not_null]
+
+  - name: component_health
+    description: Overall per-component health across the loaded stream.
+    columns:
+      - name: component_id
+        tests: [not_null, unique]

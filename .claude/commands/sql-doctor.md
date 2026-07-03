@@ -5,8 +5,9 @@ Review the SQL and dbt layer of this repo: $ARGUMENTS (default: src/opsflow/db/ 
 Check for:
 1. **Idempotency**: inserts must be duplicate-safe (`ON CONFLICT DO NOTHING` on the
    natural key); re-running ingestion must never double-count.
-2. **Event-time correctness**: all time-based models/metrics must use
-   `event_timestamp`, never `ingested_at`, so backfills don't create false spikes.
+2. **Event-time correctness**: all time-based models/metrics must use the event's
+   `"timestamp"` column (event time), never `inserted_at` (load time), so backfills
+   don't create false spikes.
 3. **Index sanity**: indexes match the query patterns (time-range scans,
    component+time filters).
 4. **dbt hygiene**: staging models only rename/cast, marts hold logic; every model
